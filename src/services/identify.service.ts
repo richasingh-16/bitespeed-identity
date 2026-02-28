@@ -1,4 +1,5 @@
 import { prisma } from "../prisma";
+import { Prisma, Contact } from "@prisma/client";
 
 export async function identify(email?: string, phoneNumber?: string) {
 
@@ -64,7 +65,7 @@ export async function identify(email?: string, phoneNumber?: string) {
 
         const otherPrimaries = primaries.slice(1);
 
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
 
             // Convert losing primaries to secondary
             for (const p of otherPrimaries) {
@@ -92,7 +93,7 @@ export async function identify(email?: string, phoneNumber?: string) {
 
     // ---------------- 5️⃣ FETCH FULL CLUSTER ----------------
 
-    let cluster = await prisma.contact.findMany({
+    let cluster: Contact[] = await prisma.contact.findMany({
         where: {
             OR: [
                 { id: finalPrimaryId },
