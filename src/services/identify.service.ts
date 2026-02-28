@@ -1,5 +1,5 @@
 import { prisma } from "../prisma";
-import { Prisma, Contact } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 export async function identify(email?: string, phoneNumber?: string) {
 
@@ -93,7 +93,7 @@ export async function identify(email?: string, phoneNumber?: string) {
 
     // ---------------- 5️⃣ FETCH FULL CLUSTER ----------------
 
-    let cluster: Contact[] = await prisma.contact.findMany({
+    let cluster = await prisma.contact.findMany({
         where: {
             OR: [
                 { id: finalPrimaryId },
