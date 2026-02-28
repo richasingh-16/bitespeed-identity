@@ -6,6 +6,10 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());   // ← MUST be here
 
+app.get("/", (req, res) => {
+  res.send("BiteSpeed Identity API is running 🚀");
+});
+
 app.post("/identify", async (req, res) => {
   try {
     const { email, phoneNumber } = req.body;
