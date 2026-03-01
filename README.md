@@ -1,6 +1,6 @@
 # BiteSpeed Identity Reconciliation API
 
-A backend service that identifies and reconciles customer contacts based on email and phone number.
+This project implements an identity reconciliation system that links customer contacts based on shared email addresses and phone numbers. The system ensures that duplicate records are merged correctly, the oldest contact remains primary, and secondary contacts are linked appropriately. Built using Node.js, TypeScript, Prisma ORM, and PostgreSQL, and deployed on Render.
 
 ## 🚀 Live API
 
