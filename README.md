@@ -40,26 +40,44 @@ A REST API that consolidates multiple customer contact records (across different
 
 ## Testing the Live API
 
-### curl
+### Postman
+
+1. Method: **POST** → URL: `https://bitespeed-api-84gw.onrender.com/identify`
+2. Body → **raw** → **JSON** → paste any body below → **Send**
+
+---
+
+### Edge Cases & Scenarios
+
+#### ✅ Case 1 — Brand new contact (no matches in DB)
+Creates a new primary contact.
 
 ```bash
-# Step 1 — Create a new contact (becomes primary)
 curl -X POST https://bitespeed-api-84gw.onrender.com/identify \
   -H "Content-Type: application/json" \
   -d '{"email":"lorraine@hillvalley.edu","phoneNumber":"123456"}'
+```
+```json
+{
+  "contact": {
+    "primaryContactId": 1,
+    "emails": ["lorraine@hillvalley.edu"],
+    "phoneNumbers": ["123456"],
+    "secondaryContactIds": []
+  }
+}
+```
 
-# Step 2 — Same phone, new email (creates a secondary contact)
+---
+
+#### ✅ Case 2 — Same phone, new email (linked to existing primary)
+Creates a secondary contact linked to the existing primary.
+
+```bash
 curl -X POST https://bitespeed-api-84gw.onrender.com/identify \
   -H "Content-Type: application/json" \
   -d '{"email":"mcfly@hillvalley.edu","phoneNumber":"123456"}'
-
-# Step 3 — Query by original email (both emails now appear under one identity)
-curl -X POST https://bitespeed-api-84gw.onrender.com/identify \
-  -H "Content-Type: application/json" \
-  -d '{"email":"lorraine@hillvalley.edu"}'
 ```
-
-**Expected response after Step 3:**
 ```json
 {
   "contact": {
@@ -71,11 +89,91 @@ curl -X POST https://bitespeed-api-84gw.onrender.com/identify \
 }
 ```
 
-### Postman
+---
 
-1. Method: **POST** → URL: `https://bitespeed-api-84gw.onrender.com/identify`
-2. Body → **raw** → **JSON**
-3. Paste any request body from above → **Send**
+#### ✅ Case 3 — Query by one field only (email or phone, not both)
+Returns the full linked identity even when only one field is provided.
+
+```bash
+curl -X POST https://bitespeed-api-84gw.onrender.com/identify \
+  -H "Content-Type: application/json" \
+  -d '{"email":"lorraine@hillvalley.edu"}'
+```
+```json
+{
+  "contact": {
+    "primaryContactId": 1,
+    "emails": ["lorraine@hillvalley.edu", "mcfly@hillvalley.edu"],
+    "phoneNumbers": ["123456"],
+    "secondaryContactIds": [2]
+  }
+}
+```
+
+---
+
+#### ✅ Case 4 — Exact duplicate request (already exists)
+No new contact is created. Returns existing identity unchanged.
+
+```bash
+curl -X POST https://bitespeed-api-84gw.onrender.com/identify \
+  -H "Content-Type: application/json" \
+  -d '{"email":"lorraine@hillvalley.edu","phoneNumber":"123456"}'
+```
+```json
+{
+  "contact": {
+    "primaryContactId": 1,
+    "emails": ["lorraine@hillvalley.edu", "mcfly@hillvalley.edu"],
+    "phoneNumbers": ["123456"],
+    "secondaryContactIds": [2]
+  }
+}
+```
+
+---
+
+#### ✅ Case 5 — Two separate primaries that now share info (merge)
+If contact A and contact B were separate primaries, and a request comes in linking them, the older one becomes the final primary. The newer one and all its children are re-linked to the older primary.
+
+```bash
+# First, create contact A (primary 1)
+curl -X POST https://bitespeed-api-84gw.onrender.com/identify \
+  -H "Content-Type: application/json" \
+  -d '{"email":"george@hillvalley.edu","phoneNumber":"919191"}'
+
+# Then, create contact B (primary 2 — different email + phone)
+curl -X POST https://bitespeed-api-84gw.onrender.com/identify \
+  -H "Content-Type: application/json" \
+  -d '{"email":"bifftannen@hillvalley.edu","phoneNumber":"717171"}'
+
+# Now link them — same email as A, same phone as B
+curl -X POST https://bitespeed-api-84gw.onrender.com/identify \
+  -H "Content-Type: application/json" \
+  -d '{"email":"george@hillvalley.edu","phoneNumber":"717171"}'
+```
+```json
+{
+  "contact": {
+    "primaryContactId": 3,
+    "emails": ["george@hillvalley.edu", "bifftannen@hillvalley.edu"],
+    "phoneNumbers": ["919191", "717171"],
+    "secondaryContactIds": [4]
+  }
+}
+```
+> Contact 3 (george) was created first so it wins. Contact 4 (biff) becomes secondary.
+
+---
+
+#### ❌ Case 6 — Neither email nor phone provided
+Returns an empty/undefined result or error depending on implementation.
+
+```bash
+curl -X POST https://bitespeed-api-84gw.onrender.com/identify \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
 
 ---
 
