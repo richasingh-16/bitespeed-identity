@@ -164,6 +164,6 @@ model Contact {
 ## Deployment
 
 Deployed on Render with:
-- **Build:** `npm install && npm run build`
+- **Build:** `npm install && npx prisma migrate deploy && npm run build`
 - **Start:** `npm start`
 - **Env var:** `DATABASE_URL`
